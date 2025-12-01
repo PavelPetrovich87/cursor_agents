@@ -4,29 +4,21 @@
 # 🤖 Cursor Multi-Agent System Initializer
 # ═══════════════════════════════════════════════════════════════════════════════
 #
-# This script sets up the multi-agent development system for your project.
-# Run it in your project root directory.
+# Creates .cursor/rules/ and .cursor/skills/ for multi-agent development.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_REPO/main/scripts/init-cursor-agents.sh | bash
-#   OR
 #   ./scripts/init-cursor-agents.sh
 #
 # ═══════════════════════════════════════════════════════════════════════════════
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Helper Functions
-# ─────────────────────────────────────────────────────────────────────────────
+NC='\033[0m'
 
 print_header() {
     echo ""
@@ -36,94 +28,56 @@ print_header() {
     echo ""
 }
 
-print_step() {
-    echo -e "${BLUE}▶ $1${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
+print_step() { echo -e "${BLUE}▶ $1${NC}"; }
+print_success() { echo -e "${GREEN}✓ $1${NC}"; }
+print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Configuration Prompts
+# Configuration
 # ─────────────────────────────────────────────────────────────────────────────
 
 get_config() {
     print_header
     
-    # Project name
     echo -e "${YELLOW}What is your project name?${NC}"
-    echo -e "(This will be used for Memory Bank organization)"
-    read -p "> " PROJECT_NAME
-    PROJECT_NAME=${PROJECT_NAME:-"my-app"}
+    echo -e "(Used for Memory Bank organization)"
+    while true; do
+        read -p "> " PROJECT_NAME
+        if [ -n "$PROJECT_NAME" ]; then
+            break
+        fi
+        echo -e "${RED}Project name is required.${NC}"
+    done
+    PROJECT_NAME=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
     
     echo ""
-    
-    # Tech stack
-    echo -e "${YELLOW}Select your tech stack:${NC}"
-    echo "  1) React Native + Expo + Node.js (default)"
-    echo "  2) React Native + Expo + Supabase"
-    echo "  3) React Native CLI + Node.js"
-    echo "  4) Next.js + Node.js"
-    echo "  5) Custom (minimal setup)"
-    read -p "> " STACK_CHOICE
-    STACK_CHOICE=${STACK_CHOICE:-1}
-    
-    echo ""
-    
-    # Memory Bank MCP
     echo -e "${YELLOW}Do you have Memory Bank MCP installed?${NC}"
-    echo "  (Required for persistent project memory)"
     echo "  y) Yes, it's configured"
     echo "  n) No, skip Memory Bank setup"
     read -p "> " HAS_MEMORY_BANK
     HAS_MEMORY_BANK=${HAS_MEMORY_BANK:-"y"}
-    
-    echo ""
-    
-    # Context7 MCP
-    echo -e "${YELLOW}Do you have Context7 MCP installed?${NC}"
-    echo "  (Used for real-time library documentation)"
-    echo "  y) Yes, it's configured"
-    echo "  n) No, I'll use manual docs"
-    read -p "> " HAS_CONTEXT7
-    HAS_CONTEXT7=${HAS_CONTEXT7:-"y"}
-    
     echo ""
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Directory Structure Creation
+# Create Directories
 # ─────────────────────────────────────────────────────────────────────────────
 
 create_directories() {
-    print_step "Creating directory structure..."
-    
+    print_step "Creating directories..."
     mkdir -p .cursor/rules
     mkdir -p .cursor/skills
     mkdir -p scripts
-    mkdir -p tests/e2e
-    mkdir -p tests/integration
-    
     print_success "Directories created"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Agent Rules Creation
+# Agent Rules
 # ─────────────────────────────────────────────────────────────────────────────
 
 create_orchestrator_rule() {
-    print_step "Creating Orchestrator agent rule..."
-    
-    cat > .cursor/rules/orchestrator.mdc << 'ORCHESTRATOR_EOF'
+    print_step "Creating Orchestrator agent..."
+    cat > .cursor/rules/orchestrator.mdc << 'EOF'
 ---
 description: ORCHESTRATOR AGENT - Task Delegation & Workflow Manager
 globs: 
@@ -131,229 +85,163 @@ alwaysApply: false
 ---
 # Identity: The Orchestrator
 You are the **Workflow Manager and Task Delegator**.
-- **Role:** You analyze requests, maintain the Memory Bank, and **EXECUTE** work via sub-agents.
+- **Role:** Analyze requests, maintain Memory Bank, delegate to sub-agents.
 - **Restriction:** You **DO NOT** edit source code directly. Delegate all coding tasks.
-- **Restriction:** You **DO NOT** modify `systemPatterns.md`. That is the System Architect's domain.
+- **Restriction:** You **DO NOT** modify `systemPatterns.md`. That is the Architect's domain.
 
 ---
 
-# 🎛️ MODE DETECTION: Interactive vs Automated
+# 🎛️ MODE DETECTION
 
-## Interactive Mode Triggers (Hand off to User + Architect)
-- ❓ New Feature: No existing contract in `systemPatterns.md`
-- 🏗️ Architectural Decision: New services, major refactoring
+## Interactive Mode (Hand off to Architect)
+- ❓ New Feature: No contract in `systemPatterns.md`
+- 🏗️ Architectural Decision needed
 - 🔐 Security-Sensitive: Auth, payments, user data
 - ⚠️ Ambiguous Requirements
 
-**Action:** Tell user to invoke `@system-architect` for design session.
+**Action:** Tell user to invoke `@system-architect`
 
-## Automated Mode Triggers (Use call_agent.sh)
+## Automated Mode (Delegate directly)
 - ✅ Contract EXISTS in `systemPatterns.md`
 - ✅ Requirements are SPECIFIC
-- ✅ No architectural decisions needed
 
 ---
 
 # Agent Registry
 
-| Agent | Domain | Mode |
-|-------|--------|------|
-| `system-architect` | systemPatterns.md, Specs | Interactive/Automated |
-| `frontend` | app/, src/components/ | Automated |
-| `backend` | backend/ | Automated |
-| `e2e` | tests/ | Automated |
+| Agent | Domain |
+|-------|--------|
+| `system-architect` | systemPatterns.md, Specs |
+| `frontend` | app/, src/components/ |
+| `backend` | backend/ |
+| `e2e` | tests/ |
 
 ---
 
-# Execution Workflow
+# Workflow
 
-## Phase 0: Mode Detection
-```
-1. memory_bank_read(projectName, 'systemPatterns.md')
-2. Check: Does contract exist? Is request clear?
-3. Decision: Interactive or Automated
-```
-
-## Phase 1: Delegation
-- Interactive: Hand off to `@system-architect`
-- Automated: Use `./scripts/call_agent.sh <agent> "<task>"`
-
-## Phase 2: Verification
-- Parse `[STATUS]` from agent output
-- Audit files listed in `[FILES]`
-- Update `activeContext.md`
-
----
+1. `memory_bank_read(projectName, 'systemPatterns.md')`
+2. Check: Does contract exist?
+3. Interactive → `@system-architect` | Automated → delegate
 
 # Delegation Template
 ```bash
 ./scripts/call_agent.sh <agent> "
 [OBJECTIVE] What to build
-[CONTEXT] Reference systemPatterns.md section
-[CONSTRAINTS] Limitations
+[CONTEXT] systemPatterns.md section
 [CRITERIA] Success conditions
 "
 ```
-ORCHESTRATOR_EOF
-    
-    print_success "Orchestrator rule created"
+EOF
+    print_success "Orchestrator created"
 }
 
 create_architect_rule() {
-    print_step "Creating System Architect agent rule..."
-    
-    cat > .cursor/rules/system-architect.mdc << 'ARCHITECT_EOF'
+    print_step "Creating System Architect agent..."
+    cat > .cursor/rules/system-architect.mdc << 'EOF'
 ---
 description: SYSTEM ARCHITECT AGENT - System Design & Technical Specifications
 globs: src/types/**/*
 alwaysApply: false
 ---
 # Identity: The Systems Architect
-You are the **Technical Authority** of this project.
-- **Role:** Turn vague requirements into rigid, actionable specifications.
-- **Goal:** Produce "Ready-to-Code" blueprints in `systemPatterns.md`.
+You are the **Technical Authority**.
+- **Role:** Turn requirements into specifications in `systemPatterns.md`.
 - **Restriction:** You DO NOT write feature code. Only definitions.
 
 ---
 
-# 🎛️ INTERACTION MODES
+# 🎛️ MODES
 
-## Mode 1: 🗣️ INTERACTIVE (Design Session)
-**When:** User invokes directly via `@system-architect`
-
+## Interactive (Design Session)
 **Flow:** DISCOVERY → PROPOSAL → APPROVAL → FINALIZE
-- Ask clarifying questions
-- Present draft design
-- Iterate on feedback
-- Write spec only after approval
 
 **Exit Statuses:**
 - `[STATUS] ⏸️ AWAITING INPUT` - Questions asked
 - `[STATUS] ⏸️ AWAITING APPROVAL` - Proposal ready
 - `[STATUS] ✅ BLUEPRINT READY` - Finalized
 
-## Mode 2: ⚡ AUTOMATED
-**When:** Called via `call_agent.sh` with complete requirements
-
+## Automated
 **Detection:** Prompt has `[OBJECTIVE]`, `[CONTEXT]`, `[CRITERIA]`
-
 **Flow:** READ → DESIGN → WRITE → EXIT
 
 ---
 
-# Memory Bank Files You Manage
+# Memory Bank Files
 
 | File | Purpose |
 |------|---------|
 | `systemPatterns.md` | API contracts, interfaces, schemas |
-| `productContext.md` | Product purpose, user stories |
+| `productContext.md` | User stories, business logic |
 | `techContext.md` | Tech stack, constraints |
 
 ---
 
-# Design Standards
-
-- **Database:** Prefer additive changes
-- **API:** RESTful, JSON responses
-- **Security:** Secure by default
-- **Scalability:** Avoid God Functions
-ARCHITECT_EOF
-    
-    print_success "System Architect rule created"
+# Standards
+- Database: Prefer additive changes
+- API: RESTful, JSON responses
+- Security: Secure by default
+EOF
+    print_success "System Architect created"
 }
 
 create_frontend_rule() {
-    print_step "Creating Frontend agent rule..."
-    
-    # Adjust based on stack choice
-    local GLOBS="app/**/*,src/components/**/*,src/hooks/**/*"
-    local FRAMEWORK="React Native + Expo Router"
-    
-    if [ "$STACK_CHOICE" = "4" ]; then
-        GLOBS="app/**/*,src/components/**/*,pages/**/*"
-        FRAMEWORK="Next.js"
-    fi
-    
-    cat > .cursor/rules/frontend.mdc << FRONTEND_EOF
+    print_step "Creating Frontend agent..."
+    cat > .cursor/rules/frontend.mdc << 'EOF'
 ---
-description: FRONTEND AGENT - UI/UX Specialist (${FRAMEWORK})
-globs: ${GLOBS}
+description: FRONTEND AGENT - UI/UX Specialist
+globs: app/**/*,src/components/**/*,src/hooks/**/*
 alwaysApply: false
 ---
 # Identity: The Frontend Specialist
-You are the **${FRAMEWORK} UI/UX Expert**.
-- **Role:** Build screens, components, and navigation logic.
-- **Authority:** Own the UI directories.
-- **Constraint:** NEVER mock data. Implement against \`systemPatterns.md\`.
+- **Role:** Build screens, components, navigation.
+- **Authority:** Own UI directories.
+- **Constraint:** NEVER mock data. Implement against `systemPatterns.md`.
 
 ---
 
-# Execution Workflow
+# Workflow
 
-## Phase 1: Context & Contract
-1. Read \`systemPatterns.md\` for interfaces
-2. Check design tokens in \`src/theme/\`
-3. Load skills if needed
-
-## Phase 2: Implementation
-- Functional Components + TypeScript
-- State: React Query (server), Zustand (client)
-- No hardcoded API URLs or colors
-
-## Phase 3: Verification
-- \`tsc --noEmit\`
-- Accessibility labels on all touchables
-
----
+1. Read `systemPatterns.md` for interfaces
+2. Implement with TypeScript + React Query/Zustand
+3. Verify: `tsc --noEmit`
 
 # Exit Protocol
-\`\`\`
+```
 [STATUS] ✅ SUCCESS
-[FILES] app/screen.tsx, src/components/Component.tsx
+[FILES] app/screen.tsx
 [SUMMARY] What was created
 [VERIFIED] Matches systemPatterns.md#Section
-\`\`\`
-FRONTEND_EOF
-    
-    print_success "Frontend rule created"
+```
+EOF
+    print_success "Frontend created"
 }
 
 create_backend_rule() {
-    print_step "Creating Backend agent rule..."
-    
-    cat > .cursor/rules/backend.mdc << 'BACKEND_EOF'
+    print_step "Creating Backend agent..."
+    cat > .cursor/rules/backend.mdc << 'EOF'
 ---
-description: BACKEND AGENT - API & Logic Specialist (Node.js)
+description: BACKEND AGENT - API & Logic Specialist
 globs: backend/**/*
 alwaysApply: false
 ---
 # Identity: The Backend Specialist
-You are the **Node.js API & Database Expert**.
 - **Role:** Implement REST APIs, database models, business logic.
-- **Authority:** Own the `backend/` directory.
-- **Critical Rule:** NEVER invent API responses. Match `systemPatterns.md` exactly.
+- **Authority:** Own `backend/` directory.
+- **Critical:** NEVER invent API responses. Match `systemPatterns.md` exactly.
 
 ---
 
-# Execution Workflow
+# Structure
+- Controllers: `backend/src/controllers/`
+- Services: `backend/src/services/`
+- Models: `backend/src/models/`
+- Routes: `backend/src/routes/`
 
-## Phase 1: Schema & Contract
-1. Read `systemPatterns.md` for endpoint definitions
-2. Verify Database Model supports required fields
-3. Load skills if needed
-
-## Phase 2: Implementation
-- **Controllers:** `backend/src/controllers/`
-- **Services:** `backend/src/services/`
-- **Models:** `backend/src/models/`
-- **Routes:** `backend/src/routes/`
-
-## Phase 3: Security
-- Validate all inputs (Zod/Joi)
+# Security
+- Validate all inputs (Zod)
 - Never log sensitive data
-- Use parameterized queries
-
----
+- Parameterized queries
 
 # Exit Protocol
 ```
@@ -362,101 +250,66 @@ You are the **Node.js API & Database Expert**.
 [SUMMARY] What was implemented
 [VERIFIED] Matches systemPatterns.md#Section
 ```
-BACKEND_EOF
-    
-    print_success "Backend rule created"
+EOF
+    print_success "Backend created"
 }
 
 create_e2e_rule() {
-    print_step "Creating E2E agent rule..."
-    
-    cat > .cursor/rules/e2e.mdc << 'E2E_EOF'
+    print_step "Creating E2E agent..."
+    cat > .cursor/rules/e2e.mdc << 'EOF'
 ---
-description: E2E AGENT - QA & Testing Specialist (Playwright/Detox)
+description: E2E AGENT - QA & Testing Specialist
 globs: tests/**/*
 alwaysApply: false
 ---
 # Identity: The QA Specialist
-You are the **Automated Testing Expert**.
 - **Role:** Write E2E and Integration tests.
-- **Authority:** Own the `tests/` directory.
-- **Mission:** You are the Gatekeeper. If tests fail, feature is NOT done.
+- **Authority:** Own `tests/` directory.
+- **Mission:** If tests fail, feature is NOT done.
 
 ---
 
-# Test Strategy
-
-- **API Tests:** supertest or Playwright request context
-- **Mobile UI:** Detox for React Native
-- **Web UI:** Playwright
-
----
+# Strategy
+- API Tests: supertest or Playwright
+- Mobile UI: Detox
+- Web UI: Playwright
 
 # Standards
-
-| Category | Standard |
-|----------|----------|
-| **Isolation** | Tests clean up their data |
-| **Speed** | Under 30s, mock heavy APIs |
-| **Coverage** | Happy path AND sad paths |
-
----
+- Tests clean up their data
+- Under 30s, mock heavy APIs
+- Happy path AND sad paths
 
 # Anti-Patterns
-- ❌ Fixed `wait(5000)` - use polling assertions
+- ❌ Fixed `wait(5000)` - use polling
 - ❌ Fragile selectors - use `data-testid`
-- ❌ Testing implementation details
-
----
 
 # Exit Protocol
 ```
 [STATUS] ✅ TESTS PASSED
 [FILES] tests/e2e/feature.spec.ts
-[SUMMARY] What was tested
 [COVERAGE] Happy path, error cases
 ```
-E2E_EOF
-    
-    print_success "E2E rule created"
+EOF
+    print_success "E2E created"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Skills Creation
+# Skills
 # ─────────────────────────────────────────────────────────────────────────────
 
 create_skills() {
-    print_step "Creating skill files..."
+    print_step "Creating skills..."
     
-    # Frontend Development Skill
-    cat > .cursor/skills/frontend-development.md << 'SKILL_EOF'
+    cat > .cursor/skills/frontend-development.md << 'EOF'
 # Frontend Development Skill
 
-## Component Architecture
-- Functional components with TypeScript interfaces
-- Props interfaces defined above component
-- Default exports for screens, named exports for components
-
 ## State Management
-- **Server State:** TanStack Query (useQuery, useMutation)
-- **Client State:** Zustand with persist middleware
-- **Form State:** React Hook Form + Zod validation
+- **Server State:** TanStack Query
+- **Client State:** Zustand
+- **Form State:** React Hook Form + Zod
 
-## Expo Router Patterns
+## Patterns
 ```typescript
-// File-based routing: app/(tabs)/home.tsx
-import { useRouter } from 'expo-router'
-
-export default function HomeScreen() {
-  const router = useRouter()
-  // router.push('/profile')
-  // router.replace('/login')
-}
-```
-
-## API Integration
-```typescript
-// Use custom hook pattern
 const useUser = (id: string) => {
   return useQuery({
     queryKey: ['user', id],
@@ -464,367 +317,187 @@ const useUser = (id: string) => {
   })
 }
 ```
-SKILL_EOF
+EOF
 
-    # Backend Development Skill
-    cat > .cursor/skills/backend-development.md << 'SKILL_EOF'
+    cat > .cursor/skills/backend-development.md << 'EOF'
 # Backend Development Skill
 
-## Architecture Pattern
+## Structure
 ```
 backend/src/
-├── controllers/    # Request/Response handling
-├── services/       # Business logic (reusable)
-├── models/         # Database schemas
-├── routes/         # Endpoint definitions
-├── middleware/     # Auth, validation, errors
-└── utils/          # Helpers
+├── controllers/
+├── services/
+├── models/
+├── routes/
+├── middleware/
+└── utils/
 ```
 
-## Error Handling
+## Validation (Zod)
 ```typescript
-// Centralized error class
-class AppError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string,
-    public isOperational = true
-  ) {
-    super(message)
-  }
-}
-
-// Usage
-throw new AppError(404, 'User not found')
-```
-
-## Validation Pattern (Zod)
-```typescript
-import { z } from 'zod'
-
-const createUserSchema = z.object({
+const schema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 })
-
-// In route
-const validated = createUserSchema.parse(req.body)
+const validated = schema.parse(req.body)
 ```
-SKILL_EOF
+EOF
 
-    # Security Compliance Skill
-    cat > .cursor/skills/security-compliance.md << 'SKILL_EOF'
+    cat > .cursor/skills/security-compliance.md << 'EOF'
 # Security Compliance Skill
 
-## Authentication Patterns
-- **JWT:** Short-lived access (15min), long-lived refresh (7d)
-- **Storage:** SecureStore (mobile), httpOnly cookies (web)
-- **OAuth:** Always use PKCE flow for mobile
+## Auth
+- JWT: 15min access, 7d refresh
+- Storage: SecureStore (mobile), httpOnly cookies (web)
+- Hash passwords with bcrypt (cost 12)
 
-## Password Requirements
-- Minimum 8 characters
-- Hash with bcrypt (cost factor 12)
-- Never log passwords
-
-## Input Validation
+## Input
 - Validate ALL user input
-- Use parameterized queries (prevent SQL injection)
-- Sanitize HTML output (prevent XSS)
+- Parameterized queries
+- Sanitize HTML output
+EOF
 
-## HTTPS
-- All API calls over HTTPS
-- Certificate pinning for sensitive apps
-SKILL_EOF
-
-    # Database Design Skill
-    cat > .cursor/skills/database-design.md << 'SKILL_EOF'
+    cat > .cursor/skills/database-design.md << 'EOF'
 # Database Design Skill
 
-## Schema Design Principles
-- Prefer additive migrations over destructive
-- Use UUIDs for public-facing IDs
-- Include `createdAt`, `updatedAt` timestamps
-
-## Relationships
-- **1:1** - Embed or reference based on access patterns
-- **1:N** - Reference with foreign key
-- **N:M** - Junction table with indexes
-
-## Indexing
-- Index foreign keys
-- Index frequently queried fields
-- Compound indexes for common query patterns
+## Principles
+- Additive migrations over destructive
+- UUIDs for public IDs
+- Include createdAt, updatedAt
 
 ## Migrations
 ```typescript
-// Always have up and down
 export async function up(db) {
   await db.schema.addColumn('users', 'avatarUrl', 'string')
 }
-
 export async function down(db) {
   await db.schema.dropColumn('users', 'avatarUrl')
 }
 ```
-SKILL_EOF
-
-    print_success "Skill files created"
+EOF
+    print_success "Skills created"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Scripts Creation
+# Scripts & Files
 # ─────────────────────────────────────────────────────────────────────────────
 
 create_call_agent_script() {
-    print_step "Creating call_agent.sh script..."
-    
-    cat > scripts/call_agent.sh << 'SCRIPT_EOF'
+    print_step "Creating call_agent.sh..."
+    cat > scripts/call_agent.sh << 'EOF'
 #!/bin/bash
-
-# Usage: ./scripts/call_agent.sh <agent_name> <task_description>
 AGENT_NAME=$1
 TASK=$2
 
-echo "🤖 Orchestrator delegating to: $AGENT_NAME..."
-
-# 1. Define the Persona File
 RULE_FILE=".cursor/rules/$AGENT_NAME.mdc"
-
-# 2. Check if rule file exists
 if [ ! -f "$RULE_FILE" ]; then
-    echo "❌ Error: Agent rule file $RULE_FILE not found."
-    echo "Available agents:"
-    ls -1 .cursor/rules/*.mdc 2>/dev/null | xargs -n1 basename | sed 's/.mdc//'
+    echo "❌ Agent not found: $AGENT_NAME"
     exit 1
 fi
 
-# 3. Execute Cursor Agent
-# Note: This is a placeholder. Actual execution depends on your setup.
-# Options:
-#   - cursor-agent CLI (if available)
-#   - Cursor's built-in agent mode
-#   - Manual invocation with @agent-name
-
 echo "📋 Task: $TASK"
-echo "📄 Rule: $RULE_FILE"
-echo ""
-echo "To execute, invoke in Cursor:"
-echo "  @$AGENT_NAME $TASK"
-echo ""
-echo "✅ $AGENT_NAME task prepared."
-SCRIPT_EOF
-
+echo "To execute: @$AGENT_NAME $TASK"
+EOF
     chmod +x scripts/call_agent.sh
-    
     print_success "call_agent.sh created"
 }
 
+create_cursorrules() {
+    print_step "Creating .cursorrules..."
+    cat > .cursorrules << 'EOF'
+# Project Rules
+
+## Code Style
+- Omit semicolons
+- Use const/let, not var
+- Prefer arrow functions
+- Strict TypeScript typing
+
+## Architecture
+- DRY, KISS, YAGNI
+- No default parameter values
+- Functional over OOP
+
+## Error Handling
+- Raise errors explicitly
+- No silent failures
+- No fallbacks - fix root cause
+
+## Multi-Agent
+- Rules: `.cursor/rules/`
+- Skills: `.cursor/skills/`
+- Orchestrator: `@orchestrator`
+- Architect: `@system-architect`
+EOF
+    print_success ".cursorrules created"
+}
+
+create_readme() {
+    print_step "Creating AGENTS.md..."
+    cat > AGENTS.md << 'EOF'
+# 🤖 Multi-Agent System
+
+| Agent | Invoke | Role |
+|-------|--------|------|
+| Orchestrator | `@orchestrator` | Coordination |
+| Architect | `@system-architect` | Design |
+| Frontend | `@frontend` | UI |
+| Backend | `@backend` | API |
+| E2E | `@e2e` | Testing |
+
+## Usage
+
+```bash
+# Design a feature
+@system-architect Add user profile with avatar
+
+# Implement after blueprint
+@orchestrator Implement profile per systemPatterns.md
+```
+
+## Flow
+
+```
+Request → Orchestrator → Contract exists?
+                              │
+            NO ───────────────┼─────────── YES
+             ↓                              ↓
+         Architect                     Delegate
+             ↓                              ↓
+         Blueprint ──────────────→ Implementation
+```
+EOF
+    print_success "AGENTS.md created"
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
-# Memory Bank Setup Instructions
+# Memory Bank Instructions
 # ─────────────────────────────────────────────────────────────────────────────
 
 print_memory_bank_instructions() {
     if [ "$HAS_MEMORY_BANK" != "y" ]; then
-        print_warning "Skipping Memory Bank setup (MCP not configured)"
+        print_warning "Skipping Memory Bank (not configured)"
         return
     fi
     
-    print_step "Memory Bank MCP Setup Instructions"
     echo ""
-    echo "Memory Bank stores project context in an external MCP server (not in your repo)."
+    print_step "Memory Bank Setup"
     echo ""
-    echo "To initialize your project, run these commands in Cursor:"
+    echo "Run in Cursor to initialize:"
     echo ""
-    echo -e "${CYAN}// 1. Create project brief${NC}"
-    echo "memory_bank_write('${PROJECT_NAME}', 'projectBrief.md', \`"
-    echo "# Project Brief: ${PROJECT_NAME}"
-    echo ""
-    echo "## Overview"
-    echo "A mobile app that..."
-    echo ""
-    echo "## Core Requirements"
-    echo "- Feature 1"
-    echo "- Feature 2"
-    echo "\`)"
-    echo ""
-    echo -e "${CYAN}// 2. Create system patterns (contracts)${NC}"
-    echo "memory_bank_write('${PROJECT_NAME}', 'systemPatterns.md', \`"
-    echo "# System Patterns"
-    echo ""
-    echo "## API Contracts"
-    echo "(Architect will populate during design sessions)"
-    echo "\`)"
-    echo ""
-    echo -e "${CYAN}// 3. Create active context${NC}"
-    echo "memory_bank_write('${PROJECT_NAME}', 'activeContext.md', \`"
-    echo "# Active Context"
-    echo ""
-    echo "## Current Sprint"
-    echo "- [ ] Initial setup"
-    echo "\`)"
-    echo ""
-    print_success "See AGENTS.md for complete Memory Bank file structure"
+    echo -e "${CYAN}memory_bank_write('${PROJECT_NAME}', 'projectBrief.md', '# ${PROJECT_NAME}\\n\\n## Overview\\n...')${NC}"
+    echo -e "${CYAN}memory_bank_write('${PROJECT_NAME}', 'systemPatterns.md', '# System Patterns\\n...')${NC}"
+    echo -e "${CYAN}memory_bank_write('${PROJECT_NAME}', 'activeContext.md', '# Active Context\\n...')${NC}"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cursor Rules File
-# ─────────────────────────────────────────────────────────────────────────────
-
-create_cursorrules() {
-    print_step "Creating .cursorrules file..."
-    
-    cat > .cursorrules << 'RULES_EOF'
-# Project-Wide Cursor Rules
-
-## Code Style
-- Omit semicolons at end of lines
-- Use const/let instead of var
-- Prefer arrow functions for inline functions
-- Always use strict TypeScript typing
-- Comments in English only
-
-## Architecture
-- Follow DRY, KISS, and YAGNI principles
-- Check if logic already exists before writing new code
-- Never use default parameter values - make all parameters explicit
-- Prefer functional programming over OOP
-
-## Error Handling
-- Always raise errors explicitly, never silently ignore
-- Use specific error types
-- NO FALLBACKS: Never mask errors with fallback mechanisms
-- Fix root causes, not symptoms
-
-## Multi-Agent System
-- This project uses a multi-agent development system
-- Agent rules are in `.cursor/rules/`
-- Skills (specialized knowledge) are in `.cursor/skills/`
-- Use `@orchestrator` for task coordination
-- Use `@system-architect` for design decisions
-RULES_EOF
-
-    print_success ".cursorrules created"
-}
-
-# ─────────────────────────────────────────────────────────────────────────────
-# README Creation
-# ─────────────────────────────────────────────────────────────────────────────
-
-create_readme() {
-    print_step "Creating AGENTS.md documentation..."
-    
-    cat > AGENTS.md << 'README_EOF'
-# 🤖 Cursor Multi-Agent Development System
-
-This project uses a multi-agent system for AI-assisted development. Each agent has specialized knowledge and responsibilities.
-
-## Quick Start
-
-```bash
-# For new features requiring design:
-@system-architect I want to add [feature description]
-
-# After blueprint is ready:
-@orchestrator Implement [feature] per systemPatterns.md#Section
-
-# For direct implementation (when contract exists):
-@frontend Create the login screen per systemPatterns.md#Auth
-@backend Implement POST /api/auth/login per systemPatterns.md#Auth
-```
-
-## Agent Directory
-
-| Agent | Invoke With | Responsibility |
-|-------|-------------|----------------|
-| 🎯 Orchestrator | `@orchestrator` | Task coordination, delegation |
-| 🏛️ System Architect | `@system-architect` | Design, specifications, contracts |
-| 📱 Frontend | `@frontend` | UI components, screens, navigation |
-| ⚙️ Backend | `@backend` | APIs, database, business logic |
-| 🧪 E2E | `@e2e` | End-to-end testing |
-
-## Flow Diagram
-
-```
-User Request
-     │
-     ▼
-┌─────────────┐
-│ Orchestrator │──── Contract exists? ────┐
-└─────────────┘                           │
-     │ NO                                 │ YES
-     ▼                                    ▼
-┌─────────────┐                    ┌─────────────┐
-│  Architect  │                    │ Delegate to │
-│  (Design)   │                    │ Impl Agents │
-└─────────────┘                    └─────────────┘
-     │                                    │
-     ▼                                    ▼
-  Blueprint                          Implementation
-     │                                    │
-     └────────────────┬───────────────────┘
-                      ▼
-                   E2E Tests
-```
-
-## File Structure
-
-```
-.cursor/
-├── rules/              # Agent definitions
-│   ├── orchestrator.mdc
-│   ├── system-architect.mdc
-│   ├── frontend.mdc
-│   ├── backend.mdc
-│   └── e2e.mdc
-└── skills/             # Specialized knowledge
-    ├── frontend-development.md
-    ├── backend-development.md
-    ├── security-compliance.md
-    └── database-design.md
-```
-
-## Memory Bank (Optional)
-
-Memory Bank is an external MCP server for persistent project context.
-Files are stored in the MCP, not in your repo.
-
-```typescript
-// Initialize your project
-memory_bank_write('my-project', 'projectBrief.md', '...')
-memory_bank_write('my-project', 'systemPatterns.md', '...')
-memory_bank_write('my-project', 'activeContext.md', '...')
-```
-
-See the full AGENTS.md for Memory Bank file structure examples.
-
-## Mode Detection
-
-The Orchestrator automatically detects when to use Interactive vs Automated mode:
-
-**Interactive Mode** (Design Session):
-- New features without contracts
-- Architectural decisions
-- Security-sensitive features
-- Ambiguous requirements
-
-**Automated Mode** (Direct Delegation):
-- Contract exists in `systemPatterns.md`
-- Clear, specific requirements
-- Implementation only (no design needed)
-README_EOF
-
-    print_success "AGENTS.md documentation created"
-}
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Main Execution
+# Main
 # ─────────────────────────────────────────────────────────────────────────────
 
 main() {
     get_config
     
-    echo ""
-    print_step "Setting up Cursor Multi-Agent System for: $PROJECT_NAME"
+    print_step "Setting up agents for: $PROJECT_NAME"
     echo ""
     
     create_directories
@@ -840,25 +513,19 @@ main() {
     
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}  ✅ Setup Complete!${NC}"
+    echo -e "${GREEN}  ✅ Done!${NC}"
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo "Next steps:"
+    echo "Created:"
+    echo "  • .cursor/rules/   (5 agents)"
+    echo "  • .cursor/skills/  (4 skills)"
+    echo "  • scripts/         (call_agent.sh)"
+    echo "  • .cursorrules"
+    echo "  • AGENTS.md"
     echo ""
-    echo "  1. Review the generated files in .cursor/"
-    echo "  2. Customize rules for your specific needs"
-    echo "  3. Start with: @orchestrator [your first task]"
-    echo ""
-    echo "Documentation: See AGENTS.md for usage guide"
-    echo ""
+    echo -e "Start with: ${CYAN}@orchestrator [task]${NC}"
     
-    # Print Memory Bank instructions if configured
-    if [ "$HAS_MEMORY_BANK" = "y" ]; then
-        echo ""
-        print_memory_bank_instructions
-    fi
+    print_memory_bank_instructions
 }
 
-# Run main function
 main
-
