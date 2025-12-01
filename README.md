@@ -1,79 +1,273 @@
-# Fullstack Boilerplate
+# 🤖 Cursor Multi-Agent System Template
 
-This repository contains a pnpm-managed monorepo with:
+A reusable boilerplate for setting up a multi-agent AI development system in Cursor IDE. Designed for React Native + Expo + Node.js projects, but adaptable to any stack.
 
-- `backend`: Node.js + Express + MongoDB API written in TypeScript
-- `app`: React Native CLI application scaffolded with TypeScript and Zustand for state management
+[![Use this template](https://img.shields.io/badge/Use%20this-template-blue?style=for-the-badge)](../../generate)
 
-## Prerequisites
+---
 
-- Node.js 18.18 or newer
-- pnpm 9 or newer
-- MongoDB server (local or remote)
-- React Native tooling for your target platforms (Xcode for iOS, Android Studio / SDK for Android)
+## ✨ Features
 
-## Install Dependencies
+- **5 Specialized Agents** - Orchestrator, Architect, Frontend, Backend, E2E
+- **Interactive Design Mode** - Human-in-the-loop for architectural decisions
+- **Automated Implementation** - Contract-driven code generation
+- **Skill Injection System** - Modular knowledge that agents can load
+- **Memory Bank Integration** - Persistent project context across sessions
+- **Context7 Support** - Real-time library documentation lookup
 
+---
+
+## 🚀 Quick Start
+
+### Option 1: Use GitHub Template
+1. Click **"Use this template"** button above
+2. Clone your new repo
+3. Run the init script:
+   ```bash
+   ./scripts/init-cursor-agents.sh
+   ```
+
+### Option 2: Add to Existing Project
 ```bash
-pnpm install
+# Download and run the init script
+curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/cursor-agents-template/main/scripts/init-cursor-agents.sh | bash
 ```
 
-> **Note**: Package installation requires internet access. If the install fails because the registry cannot be reached, rerun the command when connectivity is available.
+### Option 3: Manual Setup
+Copy these directories to your project:
+- `.cursor/rules/` - Agent definitions
+- `.cursor/skills/` - Knowledge modules
+- `scripts/call_agent.sh` - Delegation script
 
-## Backend (`backend`)
+---
 
-- Duplicate `backend/.env.example` to `backend/.env` and set the required values
-- Start the development server:
-
-```bash
-pnpm dev:backend
-```
-
-The server loads configuration from environment variables, validates them, connects to MongoDB via `mongoose`, and exposes a health check at `GET /health`.
-
-## Mobile App (`app`)
-
-The React Native package is configured for pnpm and TypeScript. It includes a simple Zustand counter store and a sample `HomeScreen` that exercises the state.
-
-```bash
-# Start Metro bundler
-pnpm dev:app
-
-# Run platform targets from the app package
-pnpm --filter app android
-pnpm --filter app ios
-```
-
-> **iOS / Android projects**: Native platform folders are not committed. Generate them by running the appropriate React Native CLI commands (e.g. `pnpm --filter app react-native run-android`) after installing platform toolchains.
-
-## Environment Variables
-
-The backend requires the following variables:
-
-- `NODE_ENV`: `development`, `test`, or `production`
-- `PORT`: Port number for the HTTP server
-- `MONGO_URI`: MongoDB connection string
-
-Missing or invalid values cause the application to exit with an explicit error.
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-backend/
-  src/
-    app.ts
-    server.ts
-    config/
-      env.ts
-      database.ts
-    routes/
-      health.ts
-app/
-  App.tsx
-  index.js
-  src/
-    screens/HomeScreen.tsx
-    store/useExampleStore.ts
+┌─────────────────────────────────────────────────────────────────┐
+│                         USER REQUEST                             │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌───────────────────────────────────────────────────────────────────┐
+│                        🎯 ORCHESTRATOR                            │
+│  • Analyzes request                                               │
+│  • Checks for existing contracts                                  │
+│  • Decides: Interactive or Automated mode                         │
+└───────────────────────────────┬───────────────────────────────────┘
+                                │
+              ┌─────────────────┴─────────────────┐
+              │                                   │
+              ▼                                   ▼
+┌─────────────────────────┐         ┌─────────────────────────┐
+│   🗣️ INTERACTIVE        │         │   ⚡ AUTOMATED           │
+│   (Design Session)       │         │   (Implementation)       │
+│                         │         │                         │
+│   User ↔ Architect      │         │   call_agent.sh →       │
+│   dialog until          │         │   Frontend/Backend/E2E  │
+│   blueprint approved    │         │                         │
+└─────────────────────────┘         └─────────────────────────┘
+              │                                   │
+              └─────────────────┬─────────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────┐
+                    │  📋 MEMORY BANK     │
+                    │  (Persistent State)  │
+                    └─────────────────────┘
 ```
 
-Use the workspace scripts to coordinate both services during development.
+---
+
+## 👥 Agent Directory
+
+| Agent | File | Invoke | Responsibility |
+|-------|------|--------|----------------|
+| 🎯 **Orchestrator** | `orchestrator.mdc` | `@orchestrator` | Workflow coordination, task delegation, mode detection |
+| 🏛️ **System Architect** | `system-architect.mdc` | `@system-architect` | Design sessions, specifications, API contracts |
+| 📱 **Frontend** | `frontend.mdc` | `@frontend` | React Native screens, components, navigation |
+| ⚙️ **Backend** | `backend.mdc` | `@backend` | Node.js APIs, database models, business logic |
+| 🧪 **E2E** | `e2e.mdc` | `@e2e` | Playwright/Detox tests, integration tests |
+
+---
+
+## 📚 Skills Library
+
+Skills are modular knowledge files that agents load when needed:
+
+| Skill | File | Used By |
+|-------|------|---------|
+| Frontend Development | `frontend-development.md` | Frontend |
+| Backend Development | `backend-development.md` | Backend |
+| Security Compliance | `security-compliance.md` | Architect, Backend |
+| Database Design | `database-design.md` | Architect, Backend |
+| Accessibility | `accessibility-compliance.md` | Frontend, E2E |
+
+---
+
+## 🔄 Workflow Examples
+
+### Example 1: New Feature (Interactive Mode)
+
+```
+You: "I want to add user authentication with Google OAuth"
+
+Orchestrator: "This needs design decisions. Handing off to System Architect..."
+              "👉 Invoke: @system-architect I want Google OAuth login"
+
+You: "@system-architect I want Google OAuth login"
+
+Architect: "Before I design this, some questions:
+           1. Account linking with existing users?
+           2. Also need Apple Sign-In?
+           3. Token storage preference?"
+           [STATUS] ⏸️ AWAITING INPUT
+
+You: "Yes linking, yes Apple, use SecureStore"
+
+Architect: "Here's my proposal: [design]
+           Does this look right?"
+           [STATUS] ⏸️ AWAITING APPROVAL
+
+You: "Approved"
+
+Architect: [STATUS] ✅ BLUEPRINT READY
+           "systemPatterns.md updated"
+
+You: "@orchestrator Implement OAuth per systemPatterns.md#OAuth"
+
+Orchestrator: [Delegates to Backend, Frontend, E2E]
+```
+
+### Example 2: Implementation Task (Automated Mode)
+
+```
+You: "@orchestrator Add a loading spinner to the login button"
+
+Orchestrator: [Checks systemPatterns.md - contract exists for LoginButton]
+              "Contract found. Delegating to Frontend..."
+              
+              ./scripts/call_agent.sh frontend "
+              [OBJECTIVE] Add loading spinner to LoginButton
+              [CONTEXT] See systemPatterns.md#Auth for button interface
+              [CRITERIA] Show spinner during auth request, disable button
+              "
+
+Frontend: [STATUS] ✅ SUCCESS
+          [FILES] src/components/LoginButton.tsx
+          [SUMMARY] Added loading state with ActivityIndicator
+```
+
+---
+
+## 📁 File Structure
+
+```
+your-project/
+├── .cursor/
+│   ├── rules/                    # Agent definitions
+│   │   ├── orchestrator.mdc
+│   │   ├── system-architect.mdc
+│   │   ├── frontend.mdc
+│   │   ├── backend.mdc
+│   │   └── e2e.mdc
+│   ├── skills/                   # Knowledge modules
+│   │   ├── frontend-development.md
+│   │   ├── backend-development.md
+│   │   ├── security-compliance.md
+│   │   └── database-design.md
+│   └── memory-bank-templates/    # Memory Bank file templates
+│       ├── projectBrief.md
+│       ├── productContext.md
+│       ├── systemPatterns.md
+│       ├── techContext.md
+│       ├── activeContext.md
+│       └── progress.md
+├── scripts/
+│   ├── init-cursor-agents.sh     # Setup script
+│   └── call_agent.sh             # Delegation script
+├── .cursorrules                  # Project-wide Cursor rules
+└── AGENTS.md                     # Usage documentation
+```
+
+---
+
+## 🔧 Configuration
+
+### Required MCP Servers
+
+| MCP Server | Purpose | Required |
+|------------|---------|----------|
+| **Memory Bank** | Persistent project memory | Recommended |
+| **Context7** | Real-time library docs | Optional |
+
+### Customization
+
+1. **Adjust Globs** - Edit `globs:` in rule files to match your directory structure
+2. **Add Skills** - Create new `.md` files in `.cursor/skills/`
+3. **Modify Workflows** - Edit agent rules to fit your process
+4. **Stack Variants** - Run `init-cursor-agents.sh` and select your stack
+
+---
+
+## 📖 Memory Bank Files
+
+If using Memory Bank MCP, these files maintain project context:
+
+| File | Purpose |
+|------|---------|
+| `projectBrief.md` | High-level project requirements |
+| `productContext.md` | User stories, business logic |
+| `systemPatterns.md` | **API contracts**, interfaces, schemas |
+| `techContext.md` | Technology stack, constraints |
+| `activeContext.md` | Current sprint, in-progress work |
+| `progress.md` | Changelog, milestones |
+
+---
+
+## 🎛️ Mode Detection Logic
+
+The Orchestrator uses these rules to determine mode:
+
+**→ Interactive Mode (Design Session)**
+- No contract in `systemPatterns.md`
+- Architectural decision required
+- Security-sensitive feature
+- Ambiguous requirements
+- Cost implications
+
+**→ Automated Mode (Direct Delegation)**
+- Contract exists
+- Requirements are specific
+- Implementation only
+- Similar patterns exist
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add your improvements
+4. Submit a pull request
+
+### Ideas for Contribution
+- [ ] Additional agent types (DevOps, Documentation)
+- [ ] More skill files (GraphQL, Testing Patterns)
+- [ ] Stack variants (Flutter, Next.js, Django)
+- [ ] Cursor extension for one-click setup
+
+---
+
+## 📄 License
+
+MIT License - feel free to use in personal and commercial projects.
+
+---
+
+## 🙏 Acknowledgments
+
+- Inspired by the need for structured AI-assisted development
+- Built for the Cursor IDE ecosystem
+- Uses MCP (Model Context Protocol) for tool integration
+
