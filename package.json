@@ -1,0 +1,19 @@
+{
+  "name": "cursor-agents",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:app": "pnpm --filter app start"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.5.0"
+  }
+}
+

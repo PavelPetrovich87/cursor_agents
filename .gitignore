@@ -1,0 +1,40 @@
+# macOS
+.DS_Store
+
+# Node.js
+node_modules
+pnpm-lock.yaml
+
+# Logs
+*.log
+logs
+*.pid
+
+# Build outputs
+dist
+build
+
+# TypeScript
+*.tsbuildinfo
+
+# React Native
+android/app/build
+ios/build
+ios/Pods
+*.xcworkspace
+*.xcuserstate
+*.orig
+
+# VS Code
+.vscode
+
+# Env files
+.env
+backend/.env
+app/.env
+
+
+
+
+
+
