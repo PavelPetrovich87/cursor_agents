@@ -620,212 +620,50 @@ SCRIPT_EOF
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Memory Bank Templates
+# Memory Bank Setup Instructions
 # ─────────────────────────────────────────────────────────────────────────────
 
-create_memory_bank_templates() {
+print_memory_bank_instructions() {
     if [ "$HAS_MEMORY_BANK" != "y" ]; then
-        print_warning "Skipping Memory Bank templates (MCP not configured)"
+        print_warning "Skipping Memory Bank setup (MCP not configured)"
         return
     fi
     
-    print_step "Creating Memory Bank template files..."
-    
-    mkdir -p .cursor/memory-bank-templates
-    
-    # Project Brief Template
-    cat > .cursor/memory-bank-templates/projectBrief.md << BRIEF_EOF
-# Project Brief: ${PROJECT_NAME}
-
-## Overview
-<!-- What is this project? One paragraph summary -->
-
-## Core Requirements
-<!-- Must-have features for MVP -->
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-
-## Target Users
-<!-- Who is this for? -->
-
-## Success Metrics
-<!-- How do we know it's working? -->
-BRIEF_EOF
-
-    # Product Context Template
-    cat > .cursor/memory-bank-templates/productContext.md << PRODUCT_EOF
-# Product Context: ${PROJECT_NAME}
-
-## Problem Statement
-<!-- What problem does this solve? -->
-
-## User Stories
-<!-- As a [user], I want [goal] so that [benefit] -->
-
-### Core User Flows
-1. **Onboarding Flow**
-   - User signs up
-   - User completes profile
-   
-2. **Main Feature Flow**
-   - User performs action
-   - System responds
-
-## Business Logic
-<!-- Key business rules -->
-PRODUCT_EOF
-
-    # System Patterns Template
-    cat > .cursor/memory-bank-templates/systemPatterns.md << PATTERNS_EOF
-# System Patterns: ${PROJECT_NAME}
-
-## API Contracts
-
-### Authentication
-\`\`\`typescript
-// POST /api/auth/login
-interface ILoginRequest {
-  email: string
-  password: string
-}
-
-interface ILoginResponse {
-  accessToken: string
-  refreshToken: string
-  user: IUser
-}
-\`\`\`
-
-### User
-\`\`\`typescript
-interface IUser {
-  id: string
-  email: string
-  name: string
-  avatarUrl: string | null
-  createdAt: string
-}
-\`\`\`
-
-## Database Schema
-
-### User Model
-| Field | Type | Constraints |
-|-------|------|-------------|
-| id | UUID | Primary Key |
-| email | string | Unique, Required |
-| passwordHash | string | Required |
-| name | string | Required |
-| avatarUrl | string | Nullable |
-| createdAt | timestamp | Default: now() |
-
-## Frontend Contracts
-
-### Auth Store (Zustand)
-\`\`\`typescript
-interface AuthState {
-  user: IUser | null
-  isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => void
-}
-\`\`\`
-PATTERNS_EOF
-
-    # Tech Context Template
-    cat > .cursor/memory-bank-templates/techContext.md << TECH_EOF
-# Tech Context: ${PROJECT_NAME}
-
-## Stack
-
-### Frontend
-- React Native + Expo SDK 51
-- Expo Router v3
-- TypeScript 5.x
-- TanStack Query v5
-- Zustand v4
-
-### Backend
-- Node.js 20 LTS
-- Express 4.x
-- TypeScript 5.x
-- Zod validation
-
-### Database
-- PostgreSQL 15 / MongoDB 7
-
-### Infrastructure
-- Hosting: TBD
-- CI/CD: GitHub Actions
-
-## Development Setup
-\`\`\`bash
-# Install dependencies
-pnpm install
-
-# Start frontend
-cd app && npx expo start
-
-# Start backend
-cd backend && npm run dev
-\`\`\`
-
-## Constraints
-- Must work offline (PWA/offline-first)
-- Must support iOS 15+ and Android 10+
-TECH_EOF
-
-    # Active Context Template
-    cat > .cursor/memory-bank-templates/activeContext.md << ACTIVE_EOF
-# Active Context: ${PROJECT_NAME}
-
-## Current Sprint
-<!-- What are we working on right now? -->
-
-## In Progress
-- [ ] Task 1
-- [ ] Task 2
-
-## Recently Completed
-- [x] Initial project setup
-
-## Blocked
-<!-- What's stuck and why? -->
-
-## Next Up
-<!-- What's coming after current tasks? -->
-ACTIVE_EOF
-
-    # Progress Template
-    cat > .cursor/memory-bank-templates/progress.md << PROGRESS_EOF
-# Progress: ${PROJECT_NAME}
-
-## Changelog
-
-### $(date +%Y-%m-%d) - Project Initialization
-- Set up Cursor multi-agent system
-- Created Memory Bank templates
-- Configured agent rules
-
----
-
-## Milestones
-
-### MVP (Target: TBD)
-- [ ] User authentication
-- [ ] Core feature 1
-- [ ] Core feature 2
-
-### v1.0 (Target: TBD)
-- [ ] Additional features
-- [ ] Polish and testing
-PROGRESS_EOF
-
-    print_success "Memory Bank templates created in .cursor/memory-bank-templates/"
+    print_step "Memory Bank MCP Setup Instructions"
     echo ""
-    print_warning "To use these templates, create a project in Memory Bank MCP:"
-    echo "   memory_bank_write('${PROJECT_NAME}', 'projectBrief.md', <content>)"
+    echo "Memory Bank stores project context in an external MCP server (not in your repo)."
+    echo ""
+    echo "To initialize your project, run these commands in Cursor:"
+    echo ""
+    echo -e "${CYAN}// 1. Create project brief${NC}"
+    echo "memory_bank_write('${PROJECT_NAME}', 'projectBrief.md', \`"
+    echo "# Project Brief: ${PROJECT_NAME}"
+    echo ""
+    echo "## Overview"
+    echo "A mobile app that..."
+    echo ""
+    echo "## Core Requirements"
+    echo "- Feature 1"
+    echo "- Feature 2"
+    echo "\`)"
+    echo ""
+    echo -e "${CYAN}// 2. Create system patterns (contracts)${NC}"
+    echo "memory_bank_write('${PROJECT_NAME}', 'systemPatterns.md', \`"
+    echo "# System Patterns"
+    echo ""
+    echo "## API Contracts"
+    echo "(Architect will populate during design sessions)"
+    echo "\`)"
+    echo ""
+    echo -e "${CYAN}// 3. Create active context${NC}"
+    echo "memory_bank_write('${PROJECT_NAME}', 'activeContext.md', \`"
+    echo "# Active Context"
+    echo ""
+    echo "## Current Sprint"
+    echo "- [ ] Initial setup"
+    echo "\`)"
+    echo ""
+    print_success "See AGENTS.md for complete Memory Bank file structure"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -938,26 +776,26 @@ User Request
 │   ├── frontend.mdc
 │   ├── backend.mdc
 │   └── e2e.mdc
-├── skills/             # Specialized knowledge
-│   ├── frontend-development.md
-│   ├── backend-development.md
-│   ├── security-compliance.md
-│   └── database-design.md
-└── memory-bank-templates/  # Memory Bank file templates
+└── skills/             # Specialized knowledge
+    ├── frontend-development.md
+    ├── backend-development.md
+    ├── security-compliance.md
+    └── database-design.md
 ```
 
 ## Memory Bank (Optional)
 
-If you have Memory Bank MCP configured, initialize your project:
+Memory Bank is an external MCP server for persistent project context.
+Files are stored in the MCP, not in your repo.
 
 ```typescript
-// Create project files
+// Initialize your project
 memory_bank_write('my-project', 'projectBrief.md', '...')
 memory_bank_write('my-project', 'systemPatterns.md', '...')
 memory_bank_write('my-project', 'activeContext.md', '...')
 ```
 
-Template files are in `.cursor/memory-bank-templates/`.
+See the full AGENTS.md for Memory Bank file structure examples.
 
 ## Mode Detection
 
@@ -997,7 +835,6 @@ main() {
     create_e2e_rule
     create_skills
     create_call_agent_script
-    create_memory_bank_templates
     create_cursorrules
     create_readme
     
@@ -1010,11 +847,16 @@ main() {
     echo ""
     echo "  1. Review the generated files in .cursor/"
     echo "  2. Customize rules for your specific needs"
-    echo "  3. If using Memory Bank, create your project files"
-    echo "  4. Start with: @orchestrator [your first task]"
+    echo "  3. Start with: @orchestrator [your first task]"
     echo ""
     echo "Documentation: See AGENTS.md for usage guide"
     echo ""
+    
+    # Print Memory Bank instructions if configured
+    if [ "$HAS_MEMORY_BANK" = "y" ]; then
+        echo ""
+        print_memory_bank_instructions
+    fi
 }
 
 # Run main function

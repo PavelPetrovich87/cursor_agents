@@ -59,13 +59,12 @@ User Request
 │   ├── frontend.mdc
 │   ├── backend.mdc
 │   └── e2e.mdc
-├── skills/             # Specialized knowledge
-│   ├── frontend-development.md
-│   ├── backend-development.md
-│   ├── security-compliance.md
-│   ├── database-design.md
-│   └── accessibility-compliance.md
-└── memory-bank-templates/  # Memory Bank file templates
+└── skills/             # Specialized knowledge
+    ├── frontend-development.md
+    ├── backend-development.md
+    ├── security-compliance.md
+    ├── database-design.md
+    └── accessibility-compliance.md
 ```
 
 ## Mode Detection
@@ -89,16 +88,103 @@ Triggers:
 
 **Flow:** Orchestrator → `call_agent.sh` → Agent implements → Verify → Done
 
-## Memory Bank Files
+---
+
+## 📋 Memory Bank (MCP Integration)
+
+Memory Bank is an **external MCP server** that stores project context persistently. Files are stored in the MCP, not in your repo.
+
+### Memory Bank Files
 
 | File | Purpose | Who Writes |
 |------|---------|------------|
-| `projectBrief.md` | Core requirements | Architect |
+| `projectBrief.md` | Core requirements, goals | Architect (initial) |
 | `productContext.md` | User stories, business logic | Architect |
-| `systemPatterns.md` | **API contracts, interfaces** | Architect |
+| `systemPatterns.md` | **API contracts, interfaces, schemas** | Architect |
 | `techContext.md` | Tech stack, constraints | Architect |
-| `activeContext.md` | Current work, TODOs | Orchestrator |
+| `activeContext.md` | Current work, TODOs, blockers | Orchestrator |
 | `progress.md` | Changelog, history | Orchestrator |
+
+### Setting Up Memory Bank
+
+```typescript
+// 1. Create your project in Memory Bank
+memory_bank_write('my-project', 'projectBrief.md', `
+# Project Brief: My App
+
+## Overview
+A mobile app that does X, Y, Z.
+
+## Core Requirements
+- User authentication
+- Feature A
+- Feature B
+`)
+
+// 2. Initialize other required files
+memory_bank_write('my-project', 'systemPatterns.md', `
+# System Patterns
+
+## API Contracts
+(Architect will populate during design sessions)
+
+## Database Schema
+(Architect will populate during design sessions)
+`)
+
+memory_bank_write('my-project', 'activeContext.md', `
+# Active Context
+
+## Current Sprint
+- [ ] Initial setup
+
+## Blockers
+None
+`)
+```
+
+### File Structure Reference
+
+#### `systemPatterns.md` (The Contract)
+```markdown
+# System Patterns
+
+## API Contracts
+
+### Authentication
+POST /api/auth/login
+- Request: { email: string, password: string }
+- Response: { accessToken: string, user: IUser }
+- Errors: 400 (invalid), 401 (unauthorized)
+
+## Interfaces
+interface IUser {
+  id: string
+  email: string
+  name: string
+}
+
+## Database Schema
+User: id, email, passwordHash, name, createdAt
+```
+
+#### `activeContext.md` (Current State)
+```markdown
+# Active Context
+
+## Current Sprint
+- [x] Setup authentication
+- [ ] Build profile screen
+- [ ] Add avatar upload
+
+## In Progress
+Profile screen implementation
+
+## Blockers
+Waiting for S3 bucket setup
+```
+
+---
 
 ## Example Workflow
 
@@ -148,6 +234,8 @@ E2E: [STATUS] ✅ TESTS PASSED
 Orchestrator: "✅ Profile upload complete!"
 ```
 
+---
+
 ## Customization
 
 ### Adding New Skills
@@ -174,4 +262,3 @@ Edit files in `.cursor/rules/` to:
 - Add new anti-patterns
 - Modify exit protocols
 - Adjust mode detection logic
-

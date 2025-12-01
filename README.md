@@ -171,18 +171,11 @@ your-project/
 │   │   ├── frontend.mdc
 │   │   ├── backend.mdc
 │   │   └── e2e.mdc
-│   ├── skills/                   # Knowledge modules
-│   │   ├── frontend-development.md
-│   │   ├── backend-development.md
-│   │   ├── security-compliance.md
-│   │   └── database-design.md
-│   └── memory-bank-templates/    # Memory Bank file templates
-│       ├── projectBrief.md
-│       ├── productContext.md
-│       ├── systemPatterns.md
-│       ├── techContext.md
-│       ├── activeContext.md
-│       └── progress.md
+│   └── skills/                   # Knowledge modules
+│       ├── frontend-development.md
+│       ├── backend-development.md
+│       ├── security-compliance.md
+│       └── database-design.md
 ├── scripts/
 │   ├── init-cursor-agents.sh     # Setup script
 │   └── call_agent.sh             # Delegation script
@@ -212,16 +205,18 @@ your-project/
 
 ## 📖 Memory Bank Files
 
-If using Memory Bank MCP, these files maintain project context:
+Memory Bank is an **external MCP server** - files are stored in the MCP, not in your repo.
 
-| File | Purpose |
-|------|---------|
-| `projectBrief.md` | High-level project requirements |
-| `productContext.md` | User stories, business logic |
-| `systemPatterns.md` | **API contracts**, interfaces, schemas |
-| `techContext.md` | Technology stack, constraints |
-| `activeContext.md` | Current sprint, in-progress work |
-| `progress.md` | Changelog, milestones |
+| File | Purpose | Owner |
+|------|---------|-------|
+| `projectBrief.md` | High-level project requirements | Architect |
+| `productContext.md` | User stories, business logic | Architect |
+| `systemPatterns.md` | **API contracts**, interfaces, schemas | Architect |
+| `techContext.md` | Technology stack, constraints | Architect |
+| `activeContext.md` | Current sprint, in-progress work | Orchestrator |
+| `progress.md` | Changelog, milestones | Orchestrator |
+
+See `AGENTS.md` for setup instructions and file structure examples.
 
 ---
 
